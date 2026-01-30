@@ -20,6 +20,7 @@ function ayn-odin2_is_userspace_supported() {
 	[[ "${RELEASE}" == "jammy" ]] && return 0
 	[[ "${RELEASE}" == "trixie" ]] && return 0
 	[[ "${RELEASE}" == "noble" ]] && return 0
+	[[ "${RELEASE}" == "plucky" ]] && return 0
 	return 1
 }
 
@@ -65,16 +66,20 @@ function post_family_tweaks__ayn-odin2_enable_services() {
 		return 0
 	fi
 
-	if [[ "${RELEASE}" == "jammy" ]] || [[ "${RELEASE}" == "noble" ]]; then
+	if [[ "${RELEASE}" == "jammy" ]] || [[ "${RELEASE}" == "noble" ]] || [[ "${RELEASE}" == "plucky" ]]; then
 		display_alert "Adding Mesa PPA For Ubuntu ${BOARD}" "warn"
-		do_with_retries 3 chroot_sdcard add-apt-repository ppa:liujianfeng1994/qcom-mainline --yes --no-update
+		do_with_retries 3 chroot_sdcard add-apt-repository ppa:kisak/kisak-mesa --yes
+
+		do_with_retries 3 chroot_sdcard_apt_get_update
+		display_alert "Installing Mesa Vulkan Drivers"
+		do_with_retries 3 chroot_sdcard_apt_get_install libgl1-mesa-dri mesa-vulkan-drivers vulkan-tools
 	fi
 
 	# We need unudhcpd from armbian repo, so enable it
 	mv "${SDCARD}"/etc/apt/sources.list.d/armbian.sources.disabled "${SDCARD}"/etc/apt/sources.list.d/armbian.sources
 
 	do_with_retries 3 chroot_sdcard_apt_get_update
-		display_alert "Installing ${BOARD} tweaks" "warn"
+	display_alert "Installing ${BOARD} tweaks" "warn"
 	do_with_retries 3 chroot_sdcard_apt_get_install alsa-ucm-conf qbootctl qrtr-tools unudhcpd mkbootimg
 	# disable armbian repo back
 	mv "${SDCARD}"/etc/apt/sources.list.d/armbian.sources "${SDCARD}"/etc/apt/sources.list.d/armbian.sources.disabled
