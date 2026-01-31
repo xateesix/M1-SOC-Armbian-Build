@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: (GPL-2.0+ OR MIT)
-// Copyright (C) 2023 Jernej Skrabec <jernej.skrabec@gmail.com>
 // Copyright (C) 2019 Ondřej Jirman <megous@megous.com>
+// Copyright (C) 2023 Jernej Skrabec <jernej.skrabec@gmail.com>
+// Edited by Patrick Yavitz <pyavitz@gmail.com>
 
 /dts-v1/;
 
@@ -20,6 +21,7 @@
 
 	chosen {
 		stdout-path = "serial0:115200n8";
+		kaslr-seed = <0xfeedbeef 0xc0def00d>;
 	};
 
 	connector {
@@ -34,7 +36,7 @@
 		};
 	};
 
-	ext_osc32k: ext_osc32k_clk {
+	ext_osc32k: ext-osc32k-clk {
 		#clock-cells = <0>;
 		compatible = "fixed-clock";
 		clock-frequency = <32768>;
@@ -44,15 +46,16 @@
 	leds {
 		compatible = "gpio-leds";
 
-		status {
-			label = "green-led";
-			gpios = <&r_pio 0 7 GPIO_ACTIVE_HIGH>; /* PL7 */
-			default-state = "on";
+		led-0 {
+			label = "orangepi:red:status";
+			gpios = <&r_pio 0 4 GPIO_ACTIVE_HIGH>; /* PL4 */
+			linux,default-trigger = "heartbeat";
 		};
 
-		power {
-			label = "red-led";
-			gpios = <&r_pio 0 4 GPIO_ACTIVE_HIGH>; /* PL4 */
+		led-1 {
+			label = "orangepi:green:power";
+			gpios = <&r_pio 0 7 GPIO_ACTIVE_HIGH>; /* PL7 */
+			linux,default-trigger = "default-on";
 		};
 	};
 
@@ -65,42 +68,33 @@
 		regulator-always-on;
 	};
 
-	reg_gmac_3v3: gmac-3v3 {
-		compatible = "regulator-fixed";
-		regulator-name = "vcc-gmac-3v3";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		startup-delay-us = <150000>;
-		gpio = <&pio 3 6 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-	};
-
 	reg_vcc33_wifi: vcc33-wifi {
 		/* Always on 3.3V regulator for WiFi and BT */
 		compatible = "regulator-fixed";
+		enable-active-high;
 		regulator-name = "vcc33-wifi";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		enable-active-high;
 		gpio = <&pio 7 7 GPIO_ACTIVE_HIGH>; /* PH7 */
 	};
 
 	reg_vcc_wifi_io: vcc-wifi-io {
 		/* Always on 1.8V/300mA regulator for WiFi and BT IO */
 		compatible = "regulator-fixed";
+		regulator-always-on;
 		regulator-name = "vcc-wifi-io";
 		regulator-min-microvolt = <1800000>;
 		regulator-max-microvolt = <1800000>;
-		regulator-always-on;
 		vin-supply = <&reg_vcc33_wifi>;
 	};
 
-	wifi_pwrseq: wifi-pwrseq {
+	sdio_pwrseq: sdio-pwrseq {
 		compatible = "mmc-pwrseq-simple";
-		clocks = <&rtc 1>;
+		clocks = <&rtc CLK_OSC32K_FANOUT>;
 		clock-names = "ext_clock";
-		reset-gpios = <&r_pio 1 3 GPIO_ACTIVE_LOW>; /* PM3 */
 		post-power-on-delay-ms = <200>;
+		reset-gpios = <&r_pio 1 3 GPIO_ACTIVE_LOW>, /* PM3 */
+			      <&r_pio 1 4 GPIO_ACTIVE_LOW>; /* PM4 */
 	};
 };
 
@@ -138,14 +132,13 @@
 };
 
 &emac {
-	pinctrl-names = "default";
-	pinctrl-0 = <&ext_rgmii_pins>;
-	phy-mode = "rgmii-id";
-	phy-handle = <&ext_rgmii_phy>;
-	phy-supply = <&reg_gmac_3v3>;
-	allwinner,rx-delay-ps = <200>;
-	allwinner,tx-delay-ps = <300>;
 	status = "okay";
+	pinctrl-0 = <&ext_rgmii_pins>;
+	pinctrl-names = "default";
+	phy-mode = "rgmii";
+	phy-handle = <&ext_rgmii_phy>;
+	allwinner,tx-delay-ps = <700>;
+	allwinner,rx-delay-ps = <1700>;
 };
 
 &gpu {
@@ -154,7 +147,6 @@
 };
 
 &hdmi {
-	hvcc-supply = <&reg_bldo2>;
 	status = "okay";
 };
 
@@ -180,7 +172,7 @@
 	ext_rgmii_phy: ethernet-phy@1 {
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <1>;
-		motorcomm,clk-out-frequency-hz = <125000000>;
+
 		reset-gpios = <&pio 3 14 GPIO_ACTIVE_LOW>; /* PD14 */
 		reset-assert-us = <15000>;
 		reset-deassert-us = <40000>;
@@ -188,29 +180,32 @@
 };
 
 &mmc0 {
-	vmmc-supply = <&reg_cldo1>;
-	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>; /* PF6 */
-	bus-width = <4>;
 	status = "okay";
+	bus-width = <4>;
+	cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>; /* PF6 */
+	vmmc-supply = <&reg_cldo1>;
 };
 
 &mmc1 {
-	vmmc-supply = <&reg_vcc33_wifi>;
-	vqmmc-supply = <&reg_vcc_wifi_io>;
-	mmc-pwrseq = <&wifi_pwrseq>;
+	status = "okay";
 	bus-width = <4>;
 	non-removable;
-	status = "okay";
+	mmc-pwrseq = <&sdio_pwrseq>;
+	vmmc-supply = <&reg_vcc33_wifi>;
+	vqmmc-supply = <&reg_vcc_wifi_io>;
+
+	sdio: wifi@1 {
+		reg = <1>;
+	};
 };
 
 &mmc2 {
+	status = "okay";
+	bus-width = <8>;
+	cap-mmc-hw-reset;
+	non-removable;
 	vmmc-supply = <&reg_cldo1>;
 	vqmmc-supply = <&reg_bldo2>;
-	bus-width = <8>;
-	non-removable;
-	cap-mmc-hw-reset;
-	mmc-hs200-1_8v;
-	status = "okay";
 };
 
 &ohci0 {
@@ -228,10 +223,6 @@
 };
 
 &pwm {
-	status = "okay";
-};
-
-&r_ir {
 	status = "okay";
 };
 
@@ -265,10 +256,10 @@
 
 			reg_aldo2: aldo2 {
 				regulator-always-on;
+				regulator-enable-ramp-delay = <100000>;
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-name = "vcc33-audio-tv-ephy-mac";
-				regulator-enable-ramp-delay = <100000>;
 			};
 
 			/* ALDO3 is shorted to CLDO1 */
@@ -356,8 +347,16 @@
 	};
 };
 
+&r_ir {
+	status = "okay";
+};
+
 &rtc {
 	clocks = <&ext_osc32k>;
+};
+
+&r_pio {
+	vcc-pm-supply = <&reg_bldo3>;
 };
 
 &sound_hdmi {
@@ -370,11 +369,18 @@
 	status = "okay";
 };
 
+/* Bluetooth */
 &uart1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart1_pins>, <&uart1_rts_cts_pins>;
 	uart-has-rtscts;
-	status = "disabled";
+	status = "okay";
+
+	bluetooth {
+		compatible = "allwinner,sunxi-btlpm";
+		bt_wake = <&r_pio 1 1 GPIO_ACTIVE_HIGH>; /* PM1 */
+		bt_hostwake = <&r_pio 1 2 GPIO_ACTIVE_HIGH>; /* PM2 */
+	};
 };
 
 &usb2otg {
