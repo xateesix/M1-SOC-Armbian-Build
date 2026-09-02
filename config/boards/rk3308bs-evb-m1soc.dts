@@ -1,11 +1,11 @@
 /dts-v1/;
 
 / {
-	compatible = "rockchip,rk3308bs-evb-amic-v11\0rockchip,rk3308";
+	compatible = "rockchip,rk3308bs-evb-m1soc\0rockchip,rk3308";
 	interrupt-parent = <0x01>;
 	#address-cells = <0x02>;
 	#size-cells = <0x02>;
-	model = "Rockchip RK3308B-S evb analog mic v11 board";
+	model = "Rockchip RK3308B-S EVB M1SOC board (Artillery M1 Pro)";
 
 	aliases {
 		ethernet0 = "/ethernet@ff4e0000";
