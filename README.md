@@ -3,6 +3,14 @@
   <br><br>
 </h3>
 
+> ## ⑂ This is a fork of [armbian/build](https://github.com/armbian/build)
+>
+> It adds Armbian board support for the **Rockchip RK3308B-S EVB M1SOC** (the SoC
+> board inside the **Artillery M1 Pro "S1-SOC"** companion display), which
+> upstream does not support. All upstream framework behavior below is unchanged.
+>
+> **What this fork adds, why, and how to build the board → [FORK.md](FORK.md).**
+
 ## Purpose of This Repository
 
 The **Armbian Linux Build Framework** creates customizable OS images based on **Debian** or **Ubuntu** for **single-board computers (SBCs)** and embedded devices.
