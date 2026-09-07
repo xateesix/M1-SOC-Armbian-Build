@@ -573,19 +573,16 @@
 		status = "okay";
 
 		goodix_ts@5d {
-			compatible = "goodix,gt911";
+			compatible = "goodix,gt9xx";
 			reg = <0x5d>;
 			interrupt-parent = <0x21>;
 			interrupts = <0x08 0x01>;
-			irq-gpios = <0x21 0x08 0x00>;
-			reset-gpios = <0x21 0x07 0x00>;
-			touchscreen-size-x = <0x1e0>;
-			touchscreen-size-y = <0x110>;
-			max-x = <0x1e0>;
-			max-y = <0x110>;
-			tp-size = <0x6d>;
+			touch-gpio = <0x21 0x08 0x00>;
+			reset-gpio = <0x21 0x07 0x00>;
+			max-x = <0x438>;
+			max-y = <0x780>;
+			tp-size = <0x38f>;
 			status = "okay";
-			goodix.cfg-group0 = [00 38 04 80 07 0a 3d 00 01 ca 28 0a 5a 3c 0a 04 00 00 00 00 11 11 00 17 19 1e 14 95 35 ff 2e 30 09 19 00 00 00 01 04 1c 00 00 00 00 00 00 00 00 00 00 00 19 41 94 45 02 07 00 00 04 9a 1b 00 85 21 ff 74 28 00 66 31 00 5b 3b 00 5b 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 1d 1c 1b 1a 19 18 17 16 15 14 13 12 11 10 0f 0e 0d 0c 0b 0a 09 08 07 06 05 04 03 02 01 00 2a 29 28 27 26 25 24 23 22 21 20 1f 1e 1d 1c 1b 19 18 17 16 15 14 13 12 11 10 0f 0e 0d 0c 0b 0a 09 08 07 06 05 04 03 02 01 00 89 01];
 		};
 	};
 
