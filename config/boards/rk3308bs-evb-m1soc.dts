@@ -3006,6 +3006,12 @@
 			linux,default-trigger = "heartbeat";
 			default-state = "on";
 		};
+
+		case-light {
+			label = "m1prox1:case-light";
+			gpios = <0x38 0x0b 0x00>;
+			default-state = "on";
+		};
 	};
 
 	backlight {
